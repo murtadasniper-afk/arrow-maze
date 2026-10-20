@@ -1,0 +1,18 @@
+{
+  "name": "arrow-maze",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Arrow Maze - Mobile Puzzle Game",
+  "type": "module",
+  "scripts": {
+    "build": "echo Static game ready",
+    "sync:android": "npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3"
+  }
+}
