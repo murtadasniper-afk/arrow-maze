@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#090d19">
+<title>Arrow Maze — تحدّي المتاهة</title>
+<style>
+:root{
+  --bg:#090d19;--panel:#121a2b;--panel2:#19243a;--line:#2b3b58;
+  --mint:#51f6c2;--cyan:#4ddcff;--violet:#a58bff;--gold:#ffd778;
+  --red:#ff6685;--text:#f4f7ff;--muted:#9eabc8;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100vh;color:var(--text);font-family:system-ui,-apple-system,Arial,sans-serif;background:radial-gradient(ellipse at 50% -15%,#26365b 0%,#11182a 38%,var(--bg) 78%);user-select:none}
+button{font:inherit;cursor:pointer}
+.app{width:100%;max-width:520px;margin:auto;padding:16px 14px 30px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{display:flex;align-items:center;gap:11px}
+.logo{width:50px;height:50px;flex-shrink:0;display:grid;place-items:center;border-radius:16px;background:linear-gradient(145deg,#63ffe0,#39a9ff 60%,#8b72ff);box-shadow:0 0 25px #4ddcff40;border:1px solid #ffffff50}
+.logo svg{width:36px;height:36px}
+.brand h1{font-size:19px;letter-spacing:1.3px;margin:0;font-weight:950}
+.brand p{font-size:11px;color:var(--muted);margin:3px 0 0}
+.icon-btn{width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:#172238;color:white;font-size:19px}
+.hero{text-align:center;margin:23px 0 18px}
+.kicker{display:inline-block;padding:6px 11px;border-radius:99px;color:var(--mint);background:#51f6c210;border:1px solid #51f6c233;font-size:11px;font-weight:900;letter-spacing:.4px}
+.hero h2{font-size:clamp(25px,7vw,33px);line-height:1.25;margin:12px 0 8px;font-weight:950}
+.hero h2 span{color:var(--mint);text-shadow:0 0 22px #51f6c230}
+.hero p{font-size:12px;color:var(--muted);line-height:1.9;max-width:330px;margin:auto}
+.challenge{margin:15px 0 0;padding:10px 12px;border:1px solid #ff668533;background:linear-gradient(100deg,#ff668510,#a58bff0c);border-radius:13px;font-size:11px;color:#ffdce4;line-height:1.8}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:18px 0}
+.stat{min-width:0;text-align:center;padding:12px 4px;border-radius:16px;background:linear-gradient(150deg,#1b2941,#111a2b);border:1px solid #2d3d59;box-shadow:inset 0 1px #ffffff08}
+.stat-icon{font-size:18px}.stat-label{font-size:10px;color:var(--muted);margin-top:4px}.stat-value{font-size:20px;font-weight:900;margin-top:2px}
+.game-panel{padding:12px;border:1px solid #33435f;border-radius:23px;background:linear-gradient(155deg,#18243aee,#101828f5);box-shadow:0 20px 55px #0005,0 0 0 1px #ffffff04,inset 0 1px #ffffff0a}
+.board-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:1px 2px 11px;font-size:11px}
+.badge{padding:7px 10px;border-radius:10px;color:var(--mint);background:#51f6c211;border:1px solid #51f6c22b;font-weight:900}
+.board-meta{color:var(--muted);text-align:left}
+.progress-track{height:5px;border-radius:10px;background:#26334a;overflow:hidden;margin-bottom:13px}
+.progress-fill{height:100%;width:0;background:linear-gradient(90deg,var(--violet),var(--cyan),var(--mint));box-shadow:0 0 12px #51f6c277;transition:width .25s}
+.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;width:100%;aspect-ratio:1;direction:ltr;touch-action:manipulation}
+.cell{position:relative;min-width:0;min-height:0;display:grid;place-items:center;border-radius:11px;border:1px solid #2b3a55;background:linear-gradient(145deg,#1c2940,#131e31);overflow:hidden;box-shadow:inset 0 1px #ffffff07}
+.cell:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 35% 20%,#ffffff07,transparent 65%);pointer-events:none}
+.cell.empty{background:#0e1727;border-color:#1b2a40;box-shadow:inset 0 0 12px #0003}
+.arrow{position:relative;z-index:1;width:100%;height:100%;padding:0;display:grid;place-items:center;border:0;background:transparent;color:var(--mint);font-size:clamp(22px,6.8vw,39px);font-weight:1000;line-height:1;text-shadow:0 0 8px #51f6c266,0 2px 0 #087d70;transition:transform .16s,color .16s,filter .16s}
+.arrow:after{content:"";position:absolute;width:62%;height:62%;border-radius:9px;background:linear-gradient(145deg,#51f6c20c,#4ddcff04);z-index:-1}
+.arrow:active{transform:scale(.82)}
+.arrow.blocked{color:var(--red);text-shadow:0 0 10px #ff668588;animation:shake .24s}
+.arrow.hint{color:var(--gold)!important;filter:drop-shadow(0 0 8px #ffd778)!important;animation:pulse .65s infinite alternate}
+.arrow.removing{animation:exit .26s forwards;pointer-events:none}
+.message{min-height:43px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:11px;line-height:1.7;padding:7px 2px}
+.message.good{color:var(--mint)}.message.bad{color:var(--red)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.btn{min-height:47px;padding:9px 8px;border:1px solid #344561;border-radius:14px;color:var(--text);background:linear-gradient(145deg,#24334c,#1a263b);font-size:12px;font-weight:850;transition:transform .14s,filter .14s}
+.btn:active{transform:scale(.97);filter:brightness(1.15)}
+.btn.primary{border:1px solid #8effdf66;color:#061b1a;background:linear-gradient(115deg,#70ffcf,#45d7e8);box-shadow:0 5px 18px #51f6c21c}
+.section-title{font-size:14px;font-weight:900;margin:23px 0 10px}
+.how-to{display:grid;gap:8px}
+.tip{display:flex;align-items:center;gap:11px;padding:12px;border-radius:15px;background:#121b2c;border:1px solid #273650}
+.tip-icon{width:38px;height:38px;flex-shrink:0;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#243b50,#202a49);font-size:19px}
+.tip strong{display:block;font-size:11px;margin-bottom:4px}.tip p{margin:0;font-size:10px;line-height:1.7;color:var(--muted)}
+.footer{text-align:center;padding:23px 0 0;color:#71809f;font-size:10px;letter-spacing:.5px}
+.overlay{position:fixed;inset:0;z-index:10;display:none;align-items:center;justify-content:center;padding:20px;background:#050914dd;backdrop-filter:blur(9px)}
+.overlay.show{display:flex}
+.modal{width:100%;max-width:350px;text-align:center;padding:25px 20px;border-radius:25px;background:linear-gradient(145deg,#202e49,#111a2b);border:1px solid #4a6082;box-shadow:0 25px 90px #0009}
+.modal-icon{font-size:51px;filter:drop-shadow(0 0 15px #51f6c244)}
+.modal h2{font-size:24px;margin:9px 0 7px}.modal p{font-size:12px;line-height:1.9;color:var(--muted);margin:0 0 12px}
+.modal .btn{width:100%;margin-top:8px}
+@keyframes exit{to{opacity:0;transform:scale(.25) rotate(25deg);filter:blur(3px)}}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+@keyframes pulse{to{transform:scale(1.14);filter:brightness(1.35) drop-shadow(0 0 10px #ffd778)}}
+@media(max-width:360px){.app{padding:12px 10px 24px}.board{gap:4px}.cell{border-radius:8px}.game-panel{padding:9px}.arrow{font-size:clamp(20px,6.5vw,30px)}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="header">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 48 48" fill="none">
+          <path d="M7 16h18V7l16 17-16 17v-9H7V16Z" stroke="#071b2a" stroke-width="4" stroke-linejoin="round"/>
+          <path d="M7 16h18V7l16 17-16 17v-9H7V16Z" stroke="#ffffff" stroke-opacity=".72" stroke-width="1.4" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div><h1>ARROW MAZE</h1><p>متاهة الأسهم · تحدّي العقل</p></div>
+    </div>
+    <button class="icon-btn" id="soundBtn" aria-label="تبديل الصوت" title="تبديل الصوت">🔊</button>
+  </header>
+
+  <section class="hero">
+    <div class="kicker">◆ تحدّي المتاهة ◆</div>
+    <h2>ليست لعبة <span>للجميع!</span></h2>
+    <p>خطّط لكل حركة. أخرج الأسهم واحدًا تلو الآخر، ولا تدع طريقك يُغلق.</p>
+    <div class="challenge">⚠️ لا تغضب إذا لم تستطع الفوز… المتاهة تختبر تفكيرك، لا سرعتك!</div>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><div class="stat-icon">🪙</div><div class="stat-label">عملاتك</div><div class="stat-value" id="coins">0</div></div>
+    <div class="stat"><div class="stat-icon">🏆</div><div class="stat-label">المرحلة</div><div class="stat-value" id="levelStat">1</div></div>
+    <div class="stat"><div class="stat-icon">➤</div><div class="stat-label">المتبقي</div><div class="stat-value" id="remaining">10</div></div>
+  </section>
+
+  <section class="game-panel">
+    <div class="board-top"><span class="badge" id="levelBadge">المرحلة 01 · 5×5</span><span class="board-meta" id="progressText">0% مكتمل</span></div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="board" id="board" aria-label="لوحة الأسهم"></div>
+    <div class="message" id="message" aria-live="polite">ابدأ بسهم طريقه خالٍ إلى حافة اللوحة.</div>
+    <div class="controls">
+      <button class="btn" id="restartBtn">↻ إعادة المرحلة</button>
+      <button class="btn primary" id="hintBtn">✦ تلميح · 5 🪙</button>
+    </div>
+  </section>
+
+  <h3 class="section-title">كيف تتغلب على المتاهة؟</h3>
+  <section class="how-to">
+    <div class="tip"><div class="tip-icon">🧭</div><div><strong>خطّط قبل الضغط</strong><p>السهم يخرج باتجاه رأسه؛ افحص المسار حتى حافة اللوحة.</p></div></div>
+    <div class="tip"><div class="tip-icon">🚧</div><div><strong>لا تتجاهل العوائق</strong><p>إذا كان سهم آخر على خط سيره، أخرج العائق أولًا.</p></div></div>
+    <div class="tip"><div class="tip-icon">⚡</div><div><strong>المراحل تكبر معك</strong><p>ابدأ بلوحة 5×5، ثم 6×6 و7×7 كلما تقدمت.</p></div></div>
+  </section>
+  <footer class="footer">ARROW MAZE · THINK SMART · ESCAPE ALL</footer>
+</main>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-icon" id="modalIcon">🏆</div>
+    <h2 id="modalTitle">أحسنت!</h2>
+    <p id="modalText">أنهيت المرحلة بنجاح.</p>
+    <button class="btn primary" id="modalPrimary">المرحلة التالية ←</button>
+    <button class="btn" id="modalSecondary">إعادة المرحلة</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const DIRECTIONS = {
+  U:{dr:-1,dc:0,char:"↑"}, D:{dr:1,dc:0,char:"↓"},
+  L:{dr:0,dc:-1,char:"←"}, R:{dr:0,dc:1,char:"→"}
+};
+let level=1, coins=0, soundEnabled=true, board=[], initialBoard=[];
+let size=5, moves=0, locked=false, audioContext=null, nextAction="next";
+
+function boardSizeForLevel(n){ if(n<=3)return 5; if(n<=7)return 6; return 7; }
+function randomInt(max){return Math.floor(Math.random()*max);}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=randomInt(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
+function pathClearOn(grid,n,index,key){
+  const d=DIRECTIONS[key],r=Math.floor(index/n),c=index%n;
+  let nr=r+d.dr,nc=c+d.dc;
+  while(nr>=0&&nr<n&&nc>=0&&nc<n){
+    if(grid[nr*n+nc]!==null)return false;
+    nr+=d.dr;nc+=d.dc;
+  }
+  return true;
+}
+
+function generateLevel(levelNumber,n){
+  const total=n*n;
+  const desired=Math.min(Math.round(total*(levelNumber<=3?.48:levelNumber<=7?.52:.56)),total-2);
+  const grid=Array(total).fill(null);
+  let placed=0;
+  const maxAttempts=total*80;
+  for(let attempt=0;attempt<maxAttempts&&placed<desired;attempt++){
+    const index=randomInt(total);
+    if(grid[index]!==null)continue;
+    const dirs=shuffle(Object.keys(DIRECTIONS));
+    const valid=dirs.filter(key=>pathClearOn(grid,n,index,key));
+    if(!valid.length)continue;
+    grid[index]=valid[0];
+    placed++;
+  }
+  if(placed<Math.min(desired,Math.floor(total*.35))){
+    return generateFallback(n,desired);
+  }
+  return grid;
+}
+function generateFallback(n,desired){
+  const total=n*n,grid=Array(total).fill(null);
+  const order=shuffle(Array.from({length:total},(_,i)=>i));
+  let placed=0;
+  for(const index of order){
+    if(placed>=desired)break;
+    const dirs=shuffle(Object.keys(DIRECTIONS));
+    const valid=dirs.filter(key=>pathClearOn(grid,n,index,key));
+    if(valid.length){grid[index]=valid[0];placed++;}
+  }
+  return grid;
+}
+function newLevel(){
+  locked=false;moves=0;size=boardSizeForLevel(level);
+  board=generateLevel(level,size);initialBoard=[...board];
+  $("overlay").classList.remove("show");
+  renderBoard();updateStats();
+  setMessage("ابدأ بسهم لا يعترض طريقه أي سهم آخر.","");
+}
+function renderBoard(){
+  const container=$("board");container.innerHTML="";
+  container.style.gridTemplateColumns=`repeat(${size}, minmax(0, 1fr))`;
+  const total=size*size;
+  for(let i=0;i<total;i++){
+    const cell=document.createElement("div");cell.className="cell";
+    const direction=board[i];
+    if(direction===null){cell.classList.add("empty");}
+    else{
+      const button=document.createElement("button");
+      button.type="button";button.className="arrow";
+      button.textContent=DIRECTIONS[direction].char;
+      button.setAttribute("aria-label","سهم اتجاهه "+({U:"الأعلى",D:"الأسفل",L:"اليسار",R:"اليمين"}[direction]));
+      button.addEventListener("click",()=>removeArrow(i,button));
+      cell.appendChild(button);
+    }
+    container.appendChild(cell);
+  }
+}
+function isPathClear(index){
+  if(board[index]===null)return false;
+  return pathClearOn(board,size,index,board[index]);
+}
+function removeArrow(index,button){
+  if(locked||board[index]===null)return;
+  if(!isPathClear(index)){
+    button.classList.remove("blocked");void button.offsetWidth;button.classList.add("blocked");
+    setMessage("🚧 الطريق مسدود! أخرج السهم الذي يعترض المسار أولًا.","bad");playSound(false);return;
+  }
+  locked=true;button.classList.add("removing");playSound(true);
+  setTimeout(()=>{
+    board[index]=null;moves++;locked=false;renderBoard();updateStats();
+    const remaining=board.filter(x=>x!==null).length;
+    if(remaining===0)completeLevel();
+    else setMessage("ممتاز! حركة صحيحة. ابحث عن السهم التالي.","good");
+  },230);
+}
+function updateStats(){
+  const remaining=board.filter(x=>x!==null).length;
+  const total=initialBoard.filter(x=>x!==null).length;
+  const removed=total-remaining,percent=total?Math.round(removed/total*100):100;
+  $("coins").textContent=coins;$("levelStat").textContent=level;$("remaining").textContent=remaining;
+  $("levelBadge").textContent=`المرحلة ${String(level).padStart(2,"0")} · ${size}×${size}`;
+  $("progressText").textContent=percent+"% مكتمل";$("progressFill").style.width=percent+"%";
+}
+function setMessage(text,type){const el=$("message");el.textContent=text;el.className="message"+(type?" "+type:"");}
+function completeLevel(){
+  const reward=10+level*2;coins+=reward;saveProgress();updateStats();nextAction="next";
+  $("modalIcon").textContent="🏆";$("modalTitle").textContent="هزمت المتاهة!";
+  $("modalText").textContent=`أنهيت المرحلة ${level} في ${moves} حركة، وحصلت على ${reward} عملة. هل أنت مستعد للتحدي التالي؟`;
+  $("modalPrimary").textContent="المرحلة التالية ←";$("modalSecondary").textContent="إعادة المرحلة";
+  $("overlay").classList.add("show");playSound(true);
+}
+function showHint(){
+  if(locked)return;
+  if(coins<5){setMessage("تحتاج إلى 5 عملات للحصول على تلميح.","bad");return;}
+  const index=board.findIndex((x,i)=>x!==null&&isPathClear(i));
+  if(index<0){setMessage("لا يوجد سهم متاح الآن؛ تحقق من اللوحة.","bad");return;}
+  coins-=5;saveProgress();updateStats();
+  const arrow=$("board").children[index]?.querySelector(".arrow");
+  if(arrow){arrow.classList.add("hint");setTimeout(()=>{if(arrow.isConnected)arrow.classList.remove("hint");},1500);}
+  setMessage("💡 السهم الذهبي يستطيع الخروج الآن.","good");
+}
+function restartLevel(){
+  if(locked)return;
+  board=[...initialBoard];$("overlay").classList.remove("show");
+  renderBoard();updateStats();setMessage("أعيدت اللوحة نفسها. جرّب ترتيبًا مختلفًا.","");
+}
+function saveProgress(){
+  try{localStorage.setItem("arrowMazeCoins",String(coins));localStorage.setItem("arrowMazeLevel",String(level));}
+  catch(e){}
+}
+function loadProgress(){
+  try{
+    const c=Number(localStorage.getItem("arrowMazeCoins")),l=Number(localStorage.getItem("arrowMazeLevel"));
+    if(Number.isFinite(c)&&c>=0)coins=Math.floor(c);
+    if(Number.isFinite(l)&&l>=1)level=Math.min(Math.floor(l),1000);
+  }catch(e){coins=0;level=1;}
+}
+function playSound(success){
+  if(!soundEnabled)return;
+  try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;
+    if(!audioContext)audioContext=new Ctx();
+    if(audioContext.state==="suspended")audioContext.resume();
+    const osc=audioContext.createOscillator(),gain=audioContext.createGain();
+    osc.connect(gain);gain.connect(audioContext.destination);osc.type="sine";
+    osc.frequency.value=success?680:175;
+    gain.gain.setValueAtTime(.07,audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.14);
+    osc.start();osc.stop(audioContext.currentTime+.14);
+  }catch(e){}
+}
+$("restartBtn").addEventListener("click",restartLevel);
+$("hintBtn").addEventListener("click",showHint);
+$("soundBtn").addEventListener("click",()=>{
+  soundEnabled=!soundEnabled;$("soundBtn").textContent=soundEnabled?"🔊":"🔇";
+  if(soundEnabled)playSound(true);
+});
+$("modalPrimary").addEventListener("click",()=>{
+  if(nextAction==="next"){level++;saveProgress();newLevel();}else restartLevel();
+});
+$("modalSecondary").addEventListener("click",restartLevel);
+loadProgress();newLevel();
+</script>
+</body>
+</html>
