@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#10191d">
+<title>Arrow Maze - Parking Escape</title>
+
+<style>
+:root{
+  --bg:#091116;
+  --panel:#142127;
+  --line:#35474d;
+  --green:#6affc8;
+  --cyan:#54dcff;
+  --gold:#ffd778;
+  --red:#ff5d70;
+  --text:#f4f8fa;
+  --muted:#9aafb5;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;
+  color:var(--text);
+  font-family:system-ui,Arial,sans-serif;
+  background:
+    radial-gradient(ellipse at 50% 0%,#25404a 0%,transparent 50%),
+    var(--bg);
+  user-select:none;
+}
+button{font:inherit;cursor:pointer}
+.app{max-width:540px;margin:auto;padding:13px 12px 30px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{display:flex;align-items:center;gap:11px}
+.logo{
+  width:54px;height:54px;display:grid;place-items:center;
+  border-radius:16px;
+  background:linear-gradient(140deg,#7effd6,#30c7e9);
+  box-shadow:0 0 25px #54dcff30;
+  border:1px solid #cafff0;
+}
+.logo svg{width:47px;height:47px}
+.brand h1{font-size:18px;letter-spacing:1px;margin:0;font-weight:1000}
+.brand p{font-size:10px;color:var(--muted);margin:4px 0 0}
+.sound{
+  width:43px;height:43px;border-radius:13px;
+  border:1px solid var(--line);background:#1c3038;color:white;
+}
+.hero{text-align:center;margin:20px 0 17px}
+.kicker{
+  display:inline-block;padding:6px 12px;border-radius:30px;
+  border:1px solid #6affc844;color:var(--green);
+  background:#6affc80b;font-size:10px;font-weight:900;
+  letter-spacing:1px;
+}
+.hero h2{font-size:29px;margin:11px 0 6px;font-weight:1000}
+.hero h2 span{color:var(--green)}
+.hero p{font-size:11px;line-height:1.9;color:var(--muted);margin:0}
+.warning{
+  margin-top:12px;padding:11px;border-radius:13px;
+  border:1px solid #ff5d7033;background:#ff5d7009;
+  color:#ffdce1;font-size:10px;line-height:1.8;
+}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0}
+.stat{
+  text-align:center;padding:11px 3px;border-radius:15px;
+  background:linear-gradient(145deg,#1d333d,#13232b);
+  border:1px solid #334b54;
+}
+.stat-icon{font-size:19px}
+.stat-label{font-size:10px;color:var(--muted);margin-top:4px}
+.stat-value{font-size:21px;font-weight:1000;margin-top:2px}
+.panel{
+  padding:11px;border-radius:23px;
+  background:linear-gradient(145deg,#192d35,#101d24);
+  border:1px solid #3a555e;
+  box-shadow:0 18px 50px #0005;
+}
+.boardhead{display:flex;align-items:center;justify-content:space-between;gap:7px;margin:2px 2px 10px}
+.badge{
+  padding:7px 9px;border-radius:10px;
+  color:var(--green);background:#6affc80b;
+  border:1px solid #6affc833;font-size:10px;font-weight:900;
+}
+.progress{height:5px;background:#2c4048;border-radius:10px;overflow:hidden;margin-bottom:11px}
+.progressbar{height:100%;width:0;background:linear-gradient(90deg,#54dcff,#6affc8);transition:width .25s}
+.boardinfo{font-size:10px;color:var(--muted)}
+
+/* ساحة الموقف والشارع */
+.world{
+  position:relative;
+  padding:0;
+  border-radius:13px;
+  overflow:hidden;
+  border:2px solid #687b7c;
+  background:#252e30;
+  box-shadow:inset 0 0 20px #0008;
+}
+.road{
+  position:relative;
+  background:
+    repeating-linear-gradient(90deg,
+      transparent 0 39px,
+      #ffffff05 40px 41px),
+    #30383a;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.road.top{height:31px;border-bottom:2px solid #e5d9a6}
+.road.bottom{height:31px;border-top:2px solid #e5d9a6}
+.road.left,.road.right{
+  position:absolute;top:31px;bottom:31px;width:27px;
+  z-index:3;
+  background:#30383a;
+}
+.road.left{left:0;border-right:2px solid #e5d9a6}
+.road.right{right:0;border-left:2px solid #e5d9a6}
+.road:before{
+  content:"";
+  position:absolute;
+  left:0;right:0;top:50%;
+  border-top:2px dashed #e6e0bd8a;
+}
+.road.left:before,.road.right:before{
+  left:50%;right:auto;top:0;bottom:0;
+  width:0;height:auto;border-top:0;border-left:2px dashed #e6e0bd8a;
+}
+.road span{
+  position:relative;z-index:1;padding:0 8px;
+  font-size:9px;font-weight:900;letter-spacing:2px;
+  color:#e9e1b4;background:#30383a;
+}
+.road.left span,.road.right span{
+  writing-mode:vertical-rl;padding:8px 0;
+}
+.parking{
+  margin:0 27px;
+  position:relative;
+  background:
+    radial-gradient(ellipse at center,#ffffff07,transparent 70%),
+    repeating-linear-gradient(0deg,#ffffff02 0 3px,transparent 3px 7px),
+    #394448;
+  padding:4px;
+}
+.grid{
+  width:100%;
+  display:grid;
+  direction:ltr;
+  gap:2px;
+}
+.cell{
+  position:relative;
+  min-width:0;
+  min-height:0;
+  aspect-ratio:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid #d9e5df22;
+  background:#252f32;
+  overflow:visible;
+}
+.cell:before{
+  content:"";
+  position:absolute;inset:2px;
+  border:1px dashed #e8f2ed24;
+  pointer-events:none;
+}
+.cell.empty{background:#323d40}
+.cell.empty:after{
+  content:"";
+  position:absolute;width:3px;height:3px;border-radius:50%;
+  background:#a5b8b044;
+}
+
+/* سيارات SVG كبيرة من الأعلى */
+.car{
+  position:relative;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:100%;
+  padding:0;
+  border:0;
+  background:transparent;
+  transform:rotate(var(--rot,0deg));
+  filter:drop-shadow(0 3px 2px #000a);
+  touch-action:manipulation;
+}
+.car svg{width:100%;height:100%;overflow:visible}
+.car:active{filter:brightness(1.2) drop-shadow(0 0 5px #fff7)}
+.car.blocked{animation:shake .24s}
+.car.hint{animation:hintPulse .55s infinite alternate;filter:drop-shadow(0 0 7px #ffd778)}
+.car.flying{
+  position:absolute;
+  z-index:10;
+  width:var(--cw);
+  height:var(--ch);
+  left:var(--left);
+  top:var(--top);
+  transform:rotate(var(--rot,0deg));
+  animation:driveOut var(--duration,.6s) cubic-bezier(.2,.6,.35,1) forwards;
+  pointer-events:none;
+}
+@keyframes driveOut{
+  from{translate:0 0;scale:1;opacity:1}
+  80%{opacity:1}
+  to{translate:var(--dx) var(--dy);scale:.95;opacity:0}
+}
+@keyframes shake{25%{translate:-3px 0}75%{translate:3px 0}}
+@keyframes hintPulse{to{scale:1.1;filter:drop-shadow(0 0 9px #ffd778)}}
+
+.message{
+  min-height:42px;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:7px 2px;color:var(--muted);
+  font-size:11px;line-height:1.8;
+}
+.message.good{color:var(--green)}
+.message.bad{color:var(--red)}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{
+  min-height:46px;padding:9px 6px;border-radius:13px;
+  color:var(--text);background:linear-gradient(145deg,#243b45,#172b34);
+  border:1px solid #3a5660;font-size:11px;font-weight:900;
+}
+.btn.primary{
+  background:linear-gradient(110deg,#7affd8,#4ddbea);
+  color:#082329;border-color:#b3ffeb;
+}
+.btn:active{transform:scale(.97)}
+.sectiontitle{font-size:14px;font-weight:950;margin:22px 0 10px}
+.tips{display:grid;gap:8px}
+.tip{
+  display:flex;align-items:center;gap:10px;padding:11px;
+  border-radius:14px;border:1px solid #29434c;background:#13242c;
+}
+.tipicon{
+  width:38px;height:38px;flex-shrink:0;border-radius:12px;
+  background:#253c45;display:grid;place-items:center;font-size:19px;
+}
+.tip strong{display:block;font-size:11px;margin-bottom:4px}
+.tip p{margin:0;font-size:10px;color:var(--muted);line-height:1.8}
+.footer{text-align:center;padding:22px 0 0;color:#637f89;font-size:9px;letter-spacing:1px}
+.overlay{
+  display:none;position:fixed;inset:0;z-index:30;
+  align-items:center;justify-content:center;padding:18px;
+  background:#03090de5;backdrop-filter:blur(8px);
+}
+.overlay.show{display:flex}
+.modal{
+  width:100%;max-width:350px;text-align:center;padding:24px 19px;
+  border:1px solid #486671;border-radius:24px;
+  background:linear-gradient(145deg,#203943,#102128);
+  box-shadow:0 25px 80px #000b;
+}
+.modalicon{font-size:47px}
+.modal h2{font-size:24px;margin:8px 0}
+.modal p{font-size:12px;color:var(--muted);line-height:1.9}
+.stars{color:var(--gold);font-size:26px;letter-spacing:4px}
+.modal .btn{width:100%;margin-top:8px}
+@media(max-width:370px){
+  .app{padding:10px 8px 24px}
+  .brand h1{font-size:16px}
+  .hero h2{font-size:26px}
+  .panel{padding:8px}
+  .road.top,.road.bottom{height:25px}
+  .road.left,.road.right{width:21px;top:25px;bottom:25px}
+  .parking{margin-left:21px;margin-right:21px;padding:3px}
+  .grid{gap:1px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+
+<body>
+<main class="app">
+
+<header class="header">
+  <div class="brand">
+    <div class="logo">
+      <svg viewBox="0 0 64 64" fill="none">
+        <path d="M8 38h9l5-13q2-5 7-5h10q6 0 8 5l5 13h3q3 0 3 4v7H7v-8q0-3 1-3Z"
+          fill="#102a32" stroke="#fff" stroke-width="2"/>
+        <path d="M25 24h13q4 0 5 4l2 7H22l2-7q0-3 1-4Z"
+          fill="#80edff" stroke="#102a32" stroke-width="1.5"/>
+        <circle cx="18" cy="48" r="5" fill="#111a20" stroke="#fff" stroke-width="2"/>
+        <circle cx="47" cy="48" r="5" fill="#111a20" stroke="#fff" stroke-width="2"/>
+        <path d="M8 12h22V5l15 14-15 14v-8H8"
+          stroke="#102a32" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div>
+      <h1>ARROW MAZE</h1>
+      <p>PARKING ESCAPE · تحدّي الخروج</p>
+    </div>
+  </div>
+  <button class="sound" id="soundBtn">🔊</button>
+</header>
+
+<section class="hero">
+  <div class="kicker">◆ PARKING ESCAPE ◆</div>
+  <h2>اهرب من <span>الموقف!</span></h2>
+  <p>افتح الطريق، حرّك السيارات بالترتيب الصحيح، واخرج من الازدحام.</p>
+  <div class="warning">⚠️ لا تغضب إذا لم تستطع الفوز… هذه المتاهة ليست للجميع!</div>
+</section>
+
+<section class="stats">
+  <div class="stat"><div class="stat-icon">🪙</div><div class="stat-label">العملات</div><div class="stat-value" id="coins">0</div></div>
+  <div class="stat"><div class="stat-icon">🏆</div><div class="stat-label">المرحلة</div><div class="stat-value" id="levelStat">1</div></div>
+  <div class="stat"><div class="stat-icon">🚘</div><div class="stat-label">السيارات</div><div class="stat-value" id="remaining">0</div></div>
+</section>
+
+<section class="panel">
+  <div class="boardhead">
+    <span class="badge" id="levelBadge">المرحلة 01</span>
+    <span class="boardinfo" id="progressText">0% مكتمل</span>
+  </div>
+  <div class="progress"><div class="progressbar" id="progressFill"></div></div>
+
+  <div class="world">
+    <div class="road top"><span>↔ PARKING ROAD ↔</span></div>
+    <div class="road left"><span>EXIT</span></div>
+    <div class="road right"><span>EXIT</span></div>
+
+    <div class="parking">
+      <div class="grid" id="board"></div>
+    </div>
+
+    <div class="road bottom"><span>↔ MAIN ROAD ↔</span></div>
+  </div>
+
+  <div class="message" id="message" aria-live="polite">
+    ابحث عن سيارة يمكنها الوصول إلى الطريق.
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="restartBtn">↻ إعادة المرحلة</button>
+    <button class="btn primary" id="hintBtn">✦ تلميح · 5 🪙</button>
+  </div>
+</section>
+
+<h3 class="sectiontitle">قواعد الهروب</h3>
+<section class="tips">
+  <div class="tip"><div class="tipicon">🚘</div><div><strong>سيارات من الأعلى</strong><p>كل سيارة تتجه نحو أحد المخارج الأربعة المحيطة بالموقف.</p></div></div>
+  <div class="tip"><div class="tipicon">🛣️</div><div><strong>الشارع هو طريق النجاة</strong><p>إذا كان المسار خاليًا، تنطلق السيارة حتى تغادر الشاشة.</p></div></div>
+  <div class="tip"><div class="tipicon">🧠</div><div><strong>فكّر قبل أن تتحرك</strong><p>السيارات المتراصة قد تمنع بعضها من الوصول إلى المخرج.</p></div></div>
+</section>
+
+<footer class="footer">ARROW MAZE · PARKING ESCAPE · THINK BEFORE YOU DRIVE</footer>
+</main>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modalicon">🏆</div>
+    <h2>هزمت المتاهة!</h2>
+    <div class="stars" id="stars">★★★</div>
+    <p id="modalText"></p>
+    <button class="btn primary" id="nextBtn">المرحلة التالية ←</button>
+    <button class="btn" id="againBtn">إعادة المرحلة</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const $=id=>document.getElementById(id);
+
+const DIR={
+  U:{dr:-1,dc:0,rot:0},
+  R:{dr:0,dc:1,rot:90},
+  D:{dr:1,dc:0,rot:180},
+  L:{dr:0,dc:-1,rot:-90}
+};
+
+/* رسومات سيارات من الأعلى، وليست إيموجي */
+const COLORS=[
+  {body:"#e63946",light:"#ff7a83",dark:"#8f1725"},
+  {body:"#168aad",light:"#70e1ff",dark:"#07546e"},
+  {body:"#ffb703",light:"#ffe082",dark:"#a86d00"},
+  {body:"#7b61d1",light:"#c5b8ff",dark:"#403080"},
+  {body:"#38a169",light:"#8ef0a9",dark:"#17683b"},
+  {body:"#edf2f4",light:"#ffffff",dark:"#9aa8b1"},
+  {body:"#f77f00",light:"#ffd19b",dark:"#a34700"},
+  {body:"#ef69a6",light:"#ffc4df",dark:"#a22b61"}
+];
+
+let level=1,coins=0,size=5,board=[],initialBoard=[];
+let locked=false,soundEnabled=true,audioContext=null;
+let moves=0,stageStart=0,hintIndex=-1;
+
+function carSVG(color){
+  const c=COLORS[color];
+  return `
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="paint${color}" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="${c.light}"/>
+        <stop offset=".45" stop-color="${c.body}"/>
+        <stop offset="1" stop-color="${c.dark}"/>
+      </linearGradient>
+      <linearGradient id="glass${color}" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#bdf5ff"/>
+        <stop offset=".55" stop-color="#426a7b"/>
+        <stop offset="1" stop-color="#172b38"/>
+      </linearGradient>
+    </defs>
+
+    <!-- العجلات -->
+    <rect x="10" y="23" width="12" height="24" rx="4" fill="#090d10"/>
+    <rect x="78" y="23" width="12" height="24" rx="4" fill="#090d10"/>
+    <rect x="10" y="57" width="12" height="22" rx="4" fill="#090d10"/>
+    <rect x="78" y="57" width="12" height="22" rx="4" fill="#090d10"/>
+
+    <!-- الهيكل -->
+    <path d="M28 7 Q50 0 72 7 Q83 11 85 25 L89 69 Q87 88 73 93 Q50 99 27 93 Q13 88 11 69 L15 25 Q17 11 28 7Z"
+      fill="url(#paint${color})" stroke="#101619" stroke-width="3"/>
+
+    <!-- الصدامات -->
+    <path d="M30 8 Q50 3 70 8 L72 13 Q50 9 28 13Z" fill="#dbe3e6" stroke="#20292d" stroke-width="2"/>
+    <path d="M28 90 Q50 94 72 90 L70 96 Q50 100 30 96Z" fill="#bac5ca" stroke="#20292d" stroke-width="2"/>
+
+    <!-- الزجاج الأمامي -->
+    <path d="M28 20 Q50 13 72 20 L77 39 Q50 45 23 39Z"
+      fill="url(#glass${color})" stroke="#d6e6e8" stroke-width="2"/>
+
+    <!-- انعكاس الزجاج -->
+    <path d="M30 22 Q38 19 45 19 L32 36 L26 36Z" fill="#ffffff" opacity=".35"/>
+
+    <!-- السقف -->
+    <path d="M26 43 Q50 39 74 43 L72 67 Q50 72 28 67Z"
+      fill="url(#paint${color})" stroke="${c.dark}" stroke-width="2"/>
+
+    <!-- خطوط السقف -->
+    <path d="M32 47 Q50 44 68 47" stroke="${c.light}" stroke-width="2" opacity=".8"/>
+    <path d="M32 63 Q50 66 68 63" stroke="${c.dark}" stroke-width="2" opacity=".7"/>
+
+    <!-- الزجاج الخلفي -->
+    <path d="M24 72 Q50 77 76 72 L71 83 Q50 89 29 83Z"
+      fill="url(#glass${color})" stroke="#d6e6e8" stroke-width="2"/>
+
+    <!-- المرايا -->
+    <path d="M14 34 L7 32 L7 41 L14 43Z" fill="${c.body}" stroke="#111a1d" stroke-width="2"/>
+    <path d="M86 34 L93 32 L93 41 L86 43Z" fill="${c.body}" stroke="#111a1d" stroke-width="2"/>
+
+    <!-- المصابيح الأمامية -->
+    <rect x="20" y="8" width="13" height="5" rx="2" fill="#fff4b2"/>
+    <rect x="67" y="8" width="13" height="5" rx="2" fill="#fff4b2"/>
+
+    <!-- المصابيح الخلفية -->
+    <rect x="19" y="85" width="12" height="5" rx="2" fill="#ff3048"/>
+    <rect x="69" y="85" width="12" height="5" rx="2" fill="#ff3048"/>
+  </svg>`;
+}
+
+function rand(n){return Math.floor(Math.random()*n)}
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    const j=rand(i+1);
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function boardSize(n){
+  if(n<=3)return 5;
+  if(n<=7)return 6;
+  if(n<=15)return 7;
+  return 8;
+}
+
+function targetCars(n,stage){
+  let density;
+  if(stage<=3)density=.56;
+  else if(stage<=7)density=.64;
+  else if(stage<=15)density=.70;
+  else if(stage<=30)density=.74;
+  else density=.77;
+
+  return Math.min(n*n-2,Math.floor(n*n*density));
+}
+
+function clearPath(grid,n,index,dir){
+  const d=DIR[dir];
+  let r=Math.floor(index/n)+d.dr;
+  let c=index%n+d.dc;
+
+  while(r>=0&&r<n&&c>=0&&c<n){
+    if(grid[r*n+c]!==null)return false;
+    r+=d.dr;c+=d.dc;
+  }
+  return true;
+}
+
+/*
+  إنشاء اللغز تدريجيًا:
+  السيارة التي توضع لاحقًا يمكن أن تحجب السيارة السابقة.
+  ترتيب وضع السيارات يوفّر ترتيبًا عكسيًا لحل اللغز.
+*/
+function generatePuzzle(stage,n){
+  const target=targetCars(n,stage);
+  const total=n*n;
+
+  for(let attempt=0;attempt<100;attempt++){
+    const grid=Array(total).fill(null);
+    const order=shuffle(Array.from({length:total},(_,i)=>i));
+    let count=0;
+
+    for(const i of order){
+      if(count>=target)break;
+
+      for(const dir of shuffle(Object.keys(DIR))){
+        if(clearPath(grid,n,i,dir)){
+          grid[i]={dir,color:rand(COLORS.length)};
+          count++;
+          break;
+        }
+      }
+    }
+
+    if(count>=Math.floor(target*.88))return grid;
+  }
+
+  /* احتياط عند تعذر الوصول إلى كثافة الهدف */
+  const grid=Array(total).fill(null);
+  const order=shuffle(Array.from({length:total},(_,i)=>i));
+
+  for(const i of order){
+    for(const dir of shuffle(Object.keys(DIR))){
+      if(clearPath(grid,n,i,dir)){
+        grid[i]={dir,color:rand(COLORS.length)};
+        break;
+      }
+    }
+    if(grid.filter(Boolean).length>=Math.max(8,Math.floor(target*.7)))break;
+  }
+  return grid;
+}
+
+function setMessage(t,type=""){
+  $("message").textContent=t;
+  $("message").className="message"+(type?" "+type:"");
+}
+
+function updateStats(){
+  const left=board.filter(Boolean).length;
+  const total=initialBoard.filter(Boolean).length;
+  const pct=total?Math.round((total-left)/total*100):100;
+
+  $("coins").textContent=coins;
+  $("levelStat").textContent=level;
+  $("remaining").textContent=left;
+  $("levelBadge").textContent=`المرحلة ${String(level).padStart(2,"0")} · ${size}×${size}`;
+  $("progressText").textContent=pct+"% مكتمل";
+  $("progressFill").style.width=pct+"%";
+}
+
+function renderBoard(){
+  const grid=$("board");
+  grid.innerHTML="";
+  grid.style.gridTemplateColumns=`repeat(${size},minmax(0,1fr))`;
+  grid.style.gridTemplateRows=`repeat(${size},minmax(0,1fr))`;
+
+  board.forEach((car,i)=>{
+    const cell=document.createElement("div");
+    cell.className="cell";
+    cell.dataset.index=i;
+
+    if(!car){
+      cell.classList.add("empty");
+    }else{
+      const button=document.createElement("button");
+      button.type="button";
+      button.className="car";
+      button.innerHTML=carSVG(car.color);
+      button.style.setProperty("--rot",DIR[car.dir].rot+"deg");
+      button.setAttribute("aria-label","سيارة");
+
+      if(i===hintIndex)button.classList.add("hint");
+
+      button.addEventListener("click",()=>tryDrive(i,button));
+      cell.appendChild(button);
+    }
+
+    grid.appendChild(cell);
+  });
+}
+
+function newLevel(){
+  locked=false;
+  hintIndex=-1;
+  moves=0;
+  size=boardSize(level);
+  board=generatePuzzle(level,size);
+  initialBoard=board.map(c=>c?{...c}:null);
+  stageStart=Date.now();
+
+  $("overlay").classList.remove("show");
+  renderBoard();
+  updateStats();
+  saveProgress();
+
+  setMessage("الموقف مزدحم! ابحث عن سيارة طريقها مفتوح.");
+}
+
+function tryDrive(index,button){
+  if(locked||!board[index])return;
+
+  const car=board[index];
+
+  if(!clearPath(board,size,index,car.dir)){
+    button.classList.remove("blocked");
+    void button.offsetWidth;
+    button.classList.add("blocked");
+    setMessage("🚧 الطريق مسدود! أخرج السيارة التي تعترض المسار أولًا.","bad");
+    playSound(false);
+    return;
+  }
+
+  animateCar(index,button,car);
+}
+
+function animateCar(index,button,car){
+  locked=true;
+
+  const grid=$("board");
+  const cell=grid.children[index];
+  const gridRect=grid.getBoundingClientRect();
+  const cellRect=cell.getBoundingClientRect();
+
+  const left=cellRect.left-gridRect.left;
+  const top=cellRect.top-gridRect.top;
+  const d=DIR[car.dir];
+
+  /*
+    تتحرك السيارة إلى خارج حدود الموقف والشاشة.
+    الاتجاه يتبع جهة مقدمة السيارة.
+  */
+  const distance=size*cellRect.width+cellRect.width*3;
+  const dx=d.dc*distance;
+  const dy=d.dr*distance;
+
+  const flying=document.createElement("div");
+  flying.className="car flying";
+  flying.innerHTML=carSVG(car.color);
+  flying.style.setProperty("--rot",DIR[car.dir].rot+"deg");
+  flying.style.setProperty("--left",left+"px");
+  flying.style.setProperty("--top",top+"px");
+  flying.style.setProperty("--cw",cellRect.width+"px");
+  flying.style.setProperty("--ch",cellRect.height+"px");
+  flying.style.setProperty("--dx",dx+"px");
+  flying.style.setProperty("--dy",dy+"px");
+
+  const duration=Math.max(420,Math.min(950,distance*.8));
+  flying.style.setProperty("--duration",duration+"ms");
+
+  grid.appendChild(flying);
+  board[index]=null;
+  moves++;
+  hintIndex=-1;
+  updateStats();
+  playSound(true);
+
+  setTimeout(()=>{
+    flying.remove();
+    locked=false;
+    renderBoard();
+    updateStats();
+
+    if(board.every(c=>c===null)){
+      completeLevel();
+    }else{
+      setMessage("🚘 خرجت السيارة بنجاح! تابع فتح الطريق.","good");
+    }
+  },duration);
+}
+
+function showHint(){
+  if(locked)return;
+
+  if(coins<5){
+    setMessage("تحتاج إلى 5 عملات للحصول على تلميح.","bad");
+    return;
+  }
+
+  const i=board.findIndex((car,index)=>
+    car&&clearPath(board,size,index,car.dir)
+  );
+
+  if(i<0){
+    setMessage("لا توجد سيارة متاحة للخروج حاليًا.","bad");
+    return;
+  }
+
+  coins-=5;
+  hintIndex=i;
+  saveProgress();
+  renderBoard();
+  updateStats();
+  setMessage("💡 السيارة المضيئة تستطيع الخروج الآن.","good");
+  playSound(true);
+
+  setTimeout(()=>{
+    if(hintIndex===i){
+      hintIndex=-1;
+      renderBoard();
+    }
+  },2200);
+}
+
+function restartLevel(){
+  if(locked)return;
+
+  board=initialBoard.map(c=>c?{...c}:null);
+  hintIndex=-1;
+  moves=0;
+  stageStart=Date.now();
+
+  $("overlay").classList.remove("show");
+  renderBoard();
+  updateStats();
+  setMessage("أعيدت المرحلة. خطط لتحركاتك من جديد.");
+}
+
+function completeLevel(){
+  const total=initialBoard.filter(Boolean).length;
+  const elapsed=Math.max(1,Math.round((Date.now()-stageStart)/1000));
+
+  let stars=1;
+  if(moves<=total+2)stars=3;
+  else if(moves<=total+Math.ceil(total*.35))stars=2;
+
+  const reward=10+level*2+stars*3;
+  coins+=reward;
+  saveProgress();
+  updateStats();
+
+  $("stars").textContent="★".repeat(stars)+"☆".repeat(3-stars);
+  $("modalText").textContent=
+    `أنهيت المرحلة ${level} خلال ${elapsed} ثانية. حصلت على ${reward} عملة!`;
+
+  $("overlay").classList.add("show");
+  playSound(true);
+}
+
+function saveProgress(){
+  try{
+    localStorage.setItem("arrowMazeCoins",String(coins));
+    localStorage.setItem("arrowMazeLevel",String(level));
+  }catch(e){}
+}
+
+function loadProgress(){
+  try{
+    const c=Number(localStorage.getItem("arrowMazeCoins"));
+    const l=Number(localStorage.getItem("arrowMazeLevel"));
+
+    if(Number.isFinite(c)&&c>=0)coins=Math.floor(c);
+    if(Number.isFinite(l)&&l>=1)level=Math.min(1000,Math.floor(l));
+  }catch(e){}
+}
+
+function playSound(success){
+  if(!soundEnabled)return;
+
+  try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;
+    if(!Ctx)return;
+
+    if(!audioContext)audioContext=new Ctx();
+    if(audioContext.state==="suspended")audioContext.resume();
+
+    const osc=audioContext.createOscillator();
+    const gain=audioContext.createGain();
+
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+    osc.type="sine";
+    osc.frequency.value=success?620:160;
+
+    gain.gain.setValueAtTime(.06,audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+.15);
+
+    osc.start();
+    osc.stop(audioContext.currentTime+.15);
+  }catch(e){}
+}
+
+$("restartBtn").addEventListener("click",restartLevel);
+$("hintBtn").addEventListener("click",showHint);
+
+$("soundBtn").addEventListener("click",()=>{
+  soundEnabled=!soundEnabled;
+  $("soundBtn").textContent=soundEnabled?"🔊":"🔇";
+  if(soundEnabled)playSound(true);
+});
+
+$("nextBtn").addEventListener("click",()=>{
+  level++;
+  saveProgress();
+  newLevel();
+});
+
+$("againBtn").addEventListener("click",restartLevel);
+
+loadProgress();
+newLevel();
+</script>
+</body>
+</html>
