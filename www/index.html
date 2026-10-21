@@ -124,8 +124,9 @@ logo.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`
 <rect width="512" height="512" rx="72" fill="url(#a)"/>
 <path d="M35 170H477M35 345H477" stroke="#e8e5b7" stroke-width="7" stroke-dasharray="25 18" opacity=".8"/>
 <path d="M256 355V120m-67 67 67-67 67 67" stroke="#63ffd0" stroke-width="30" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-<g transform="translate(155 230)"><rect x="10" y="0" width="182" height="230" rx="47" fill="#111a20" stroke="#e7f7ff" stroke-width="7"/><rect x="22" y="23" width="158" height="70" rx="22" fill="#182b36"/><rect x="22" y="112" width="158" height="48" rx="14" fill="#182b36"/><rect x="22" y="23" width="12" height="38" rx="5" fill="#fff6bf"/><rect x="168" y="23" width="12" height="38" rx="5" fill="#fff6bf"/><rect x="22" y="174" width="12" height="22" rx="5" fill="#ff2b46"/><rect x="168" y="174" width="12" height="22" rx="5" fill="#ff2b46"/></g>
+<g transform="translate(155 230)"><rect x="10" y="0" width="182" height="230" rx="47" fill="#111a20" stroke="#e7f7f5" stroke-width="6"/><path d="M49 16Q101 -1 153 16L166 65H36Z" fill="#a4efff"/><path d="M35 82Q101 68 167 82L160 148Q101 165 42 148Z" fill="url(#b)"/><path d="M42 170Q101 184 160 170L148 206H54Z" fill="#182b36"/><rect x="22" y="23" width="12" height="38" rx="5" fill="#fff6bf"/><rect x="168" y="23" width="12" height="38" rx="5" fill="#fff6bf"/><rect x="22" y="174" width="12" height="22" rx="5" fill="#ff2b46"/><rect x="168" y="174" width="12" height="22" rx="5" fill="#ff2b46"/></g>
 </svg>`);
+
 const DIRS={U:{dr:-1,dc:0},R:{dr:0,dc:1},D:{dr:1,dc:0},L:{dr:0,dc:-1}};
 const carColors=[0xe83c4d,0x168ee0,0xffc52d,0x43cf9b,0x9a72ef,0xf4f7f8,0xff853b,0xe85bb4];
 let level=1,coins=0,unlocked=1,size=5,cars=[],initialCars=[],locked=false;
@@ -148,7 +149,7 @@ function setStatus(t){$('status').textContent=t}
 function rand(n){return Math.floor(Math.random()*n)}
 function shuffle(a){for(let i=a.length-1;i>0;i--){let j=rand(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
 function gridSize(l){return l<4?5:l<8?6:l<16?7:8}
-function targetCount(n,l){let d=l<4?.56:l<8?.63:l<16?.68:.72;return Math.min(n*n-2,Math.floor(n*n*d))}
+  function targetCount(n,l){let d=l<4?.56:l<8?.63:l<16?.68:.72;return Math.min(n*n-2,Math.floor(n*n*d))}
 function pathClear(grid,n,index,dir){let d=DIRS[dir],r=Math.floor(index/n)+d.dr,c=index%n+d.dc;while(r>=0&&r<n&&c>=0&&c<n){if(grid[r*n+c])return false;r+=d.dr;c+=d.dc}return true}
 function generate(n,l){
  const target=targetCount(n,l);
@@ -183,407 +184,155 @@ function initThree(){
 }
 function mat(color,roughness=.65,metalness=.04){return new THREE.MeshStandardMaterial({color,roughness,metalness})}
 function box(parent,w,h,d,material,x,y,z,cast=true){
- const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.position.set(x,y,z);m.castShadow=cast;m.receiveShadow=true;parent.add(m);return m;
+ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m
+   setStatus('انقر على سيارة يمكنها الخروج. اسحب على الأرض لتغيير زاوية الكاميرا.');
 }
-function line(parent,x1,z1,x2,z2,color=0xe7e4c6,width=.045,y=.015){
- const len=Math.hypot(x2-x1,z2-z1);const m=new THREE.Mesh(new THREE.BoxGeometry(width,.012,len),mat(color,.8));m.position.set((x1+x2)/2,y,(z1+z2)/2);m.rotation.y=Math.atan2(x2-x1,z2-z1);parent.add(m);return m;
-}
-function buildEnvironment(){
- while(roadGroup.children.length)roadGroup.remove(roadGroup.children[0]);
- const n=size,span=boardSpan(n),half=span/2+1.25,roadW=3.3;
- box(roadGroup,span+roadW*2+2,.12,span+roadW*2+2,mat(0x323b3d,.93),0,-.07,0,false);
- box(roadGroup,span+1.2,.08,span+1.2,mat(0x4a5554,.92),0,-.005,0,false);
- // الطريق المحيط بموقف السيارات
- box(roadGroup,span+roadW*2+1,.09,roadW,mat(0x242c30,.95),0,.005,-half-roadW/2,false);
- box(roadGroup,span+roadW*2+1,.09,roadW,mat(0x242c30,.95),0,.005,half+roadW/2,false);
- box(roadGroup,roadW,.09,span+1,mat(0x242c30,.95),-half-roadW/2,.005,0,false);
- box(roadGroup,roadW,.09,span+1,mat(0x242c30,.95),half+roadW/2,.005,0,false);
- // علامات الطريق
- for(let x=-half-1;x<half+1;x+=1.7){
-  box(roadGroup,.72,.018,.055,mat(0xd8d8b0),x,.07,-half-roadW/2,false);
-  box(roadGroup,.72,.018,.055,mat(0xd8d8b0),x,.07,half+roadW/2,false);
- }
- for(let z=-half;z<half;z+=1.7){
-  box(roadGroup,.055,.018,.72,mat(0xd8d8b0),-half-roadW/2,.07,z,false);
-  box(roadGroup,.055,.018,.72,mat(0xd8d8b0),half+roadW/2,.07,z,false);
- }
- // خطوط مواقف السيارات
- for(let r=0;r<n;r++)for(let c=0;c<n;c++){
-  const p=positions(r,c,n),w=spacing*.91,d=spacing*.91;
-  line(roadGroup,p.x-w/2,p.z-d/2,p.x+w/2,p.z-d/2,0xc8d2c8,.025,.06);
-  line(roadGroup,p.x-w/2,p.z-d/2,p.x-w/2,p.z+d/2,0xc8d2c8,.025,.06);
-  if(c===n-1)line(roadGroup,p.x+w/2,p.z-d/2,p.x+w/2,p.z+d/2,0xc8d2c8,.025,.06);
-  if(r===n-1)line(roadGroup,p.x-w/2,p.z+d/2,p.x+w/2,p.z+d/2,0xc8d2c8,.025,.06);
- }
- // زوايا خضراء وأعمدة إنارة صغيرة
- for(const x of [-half-1.0,half+1.0])for(const z of [-half-1.0,half+1.0]){
-  box(roadGroup,1.1,.35,1.1,mat(0x1e3c2d),x,.08,z);
-  for(let i=0;i<5;i++){
-   const leaf=new THREE.Mesh(new THREE.ConeGeometry(.13,.55,5),mat(i%2?0x237849:0x368c50));leaf.position.set(x+(Math.random()-.5)*.65,.48,z+(Math.random()-.5)*.65);leaf.castShadow=true;roadGroup.add(leaf);
-  }
-  const bollard=new THREE.Mesh(new THREE.CylinderGeometry(.12,.15,.65,12),mat(0x5b6b6c));bollard.position.set(x*.87,.32,z*.87);bollard.castShadow=true;roadGroup.add(bollard);
- }
- // علامة خروج خضراء مضيئة
- const arrowMat=new THREE.MeshStandardMaterial({color:0x58ffb6,emissive:0x19e990,emissiveIntensity:2.4,roughness:.3});
- const exitZ=-half-roadW/2;
- box(roadGroup,1.0,.035,.13,arrowMat,0,.09,exitZ,false);
- const shape=new THREE.Shape();shape.moveTo(0,-.62);shape.lineTo(.55,.08);shape.lineTo(.22,.08);shape.lineTo(.22,.53);shape.lineTo(-.22,.53);shape.lineTo(-.22,.08);shape.lineTo(-.55,.08);shape.closePath();
- const ag=new THREE.Mesh(new THREE.ShapeGeometry(shape),arrowMat);ag.rotation.x=-Math.PI/2;ag.position.set(0,.105,exitZ-.1);roadGroup.add(ag);
-}
-function makeCar(car,index){
- const g=new THREE.Group();g.userData={index,car};
- const bodyMat=mat(carColors[car.color],.25,.22),dark=mat(0x111a20,.45),glass=mat(0x173544,.18,.25),chrome=mat(0xb8c9ce,.3,.6);
- // مقدمة السيارة باتجاه -Z
- box(g,1.02,.30,1.70,bodyMat,0,.30,0);
- const hood=box(g,.88,.15,.47,bodyMat,0,.48,-.53);
- const trunk=box(g,.88,.12,.32,bodyMat,0,.45,.59);
- // سقف ومقصورة السيارة
- const roof=box(g,.78,.25,.76,bodyMat,0,.53,.02);
- box(g,.70,.045,.35,glass,0,.675,-.23,false);
- box(g,.70,.045,.25,glass,0,.675,.30,false);
- box(g,.04,.045,.58,chrome,-.365,.69,.025,false);
- box(g,.04,.045,.58,chrome,.365,.69,.025,false);
- // العجلات
- for(const z of [-.52,.52])for(const x of [-.55,.55]){
-  const wheel=new THREE.Mesh(new THREE.BoxGeometry(.18,.30,.36),dark);wheel.position.set(x,.20,z);wheel.castShadow=true;g.add(wheel);
-  const hub=new THREE.Mesh(new THREE.CylinderGeometry(.065,.065,.025,12),chrome);hub.rotation.z=Math.PI/2;hub.position.set(x*1.02,.20,z);g.add(hub);
- }
- // مصابيح أمامية وخلفية واضحة
- const head=mat(0xfff3bc,.2,.1);head.emissive.setHex(0xffe38a);head.emissiveIntensity=1.0;
- const tail=mat(0xff233d,.25,.1);tail.emissive.setHex(0xc90020);tail.emissiveIntensity=1.1;
- for(const x of [-.34,.34]){
-  box(g,.20,.09,.08,head,x,.42,-.84,false);
-  box(g,.20,.09,.08,tail,x,.42,.84,false);
- }
- return g;
-}
- // تهيئة السيارات حتى تتوافق مع الجزء السابق
-const originalMakeCar = makeCar;
-makeCar = function(car,index){
-  const g=originalMakeCar(car,index);
-  const p=positions(Math.floor(index/size),index%size,size);
-  g.position.set(p.x,0,p.z);
-  g.rotation.y={U:0,R:-Math.PI/2,D:Math.PI,L:Math.PI/2}[car.dir];
-  g.userData.index=index;
-  g.userData.car=car;
-  g.userData.home={...p};
-  g.userData.moving=false;
-  g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
-  carGroup.add(g);
-  car.mesh=g;
-  return g;
-};
-
-function rebuildCars(){
-  while(carGroup.children.length){
-    const c=carGroup.children[0];
-    carGroup.remove(c);
-    c.traverse(o=>{
-      if(o.isMesh){
-        o.geometry.dispose();
-        if(o.material){
-          if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());
-          else o.material.dispose();
-        }
-      }
-    });
-  }
-  cars.forEach((car,i)=>{if(car)makeCar(car,i)});
-  buildHintArrow();
-  updateHUD();
-}
-
-function buildHintArrow(){
-  while(arrowGroup.children.length){
-    const c=arrowGroup.children[0];
-    arrowGroup.remove(c);
-    if(c.geometry)c.geometry.dispose();
-    if(c.material)c.material.dispose();
-  }
-  const i=cars.findIndex((c,idx)=>c&&!c.moving&&pathClear(cars,size,idx,c.dir));
-  if(i<0)return;
-  const car=cars[i],r=Math.floor(i/size),c=i%size;
-  const p=positions(r,c,size),d=DIRS[car.dir];
-  const material=new THREE.MeshStandardMaterial({
-    color:0x52ffb0,
-    emissive:0x00ff92,
-    emissiveIntensity:2.8,
-    transparent:true,
-    opacity:.92,
-    side:THREE.DoubleSide
-  });
-  const shape=new THREE.Shape();
-  shape.moveTo(0,-.42);
-  shape.lineTo(.31,0);
-  shape.lineTo(.12,0);
-  shape.lineTo(.12,.38);
-  shape.lineTo(-.12,.38);
-  shape.lineTo(-.12,0);
-  shape.lineTo(-.31,0);
-  shape.closePath();
-  const mesh=new THREE.Mesh(new THREE.ShapeGeometry(shape),material);
-  mesh.rotation.x=-Math.PI/2;
-  mesh.position.set(p.x+d.dc*.88,.105,p.z+d.dr*.88);
-  mesh.rotation.y={U:0,R:-Math.PI/2,D:Math.PI,L:Math.PI/2}[car.dir];
-  arrowGroup.add(mesh);
-}
-
-function updateHUD(){
-  $('carsLeft').textContent=cars.filter(Boolean).length;
-  $('gameCoins').textContent=coins;
-  $('homeCoins').textContent=coins;
-  $('homeLevel').textContent=level;
-  $('stageNumber').textContent=level;
-}
-
-function startLevel(){
-  $('overlay').classList.remove('show');
-  size=gridSize(level);
-  cars=generate(size,level);
-  initialCars=cars.map(c=>c?{...c}:null);
-  locked=false;
-  winShown=false;
-  cameraAzimuth=0;
-  cameraTilt=baseCameraTilt;
-  buildEnvironment();
-  rebuildCars();
-  resetCamera();
-  showScreen('game');
-  setStatus('انقر على سيارة يمكنها الخروج. اسحب على الأرض لتغيير زاوية الكاميرا.');
-}
-
-function resetCamera(){
-  if(!camera)return;
-  cameraAzimuth=0;
-  cameraTilt=baseCameraTilt;
-  updateCamera();
-}
-
+function resetCamera(){if(!camera)return;cameraAzimuth=0;cameraTilt=baseCameraTilt;updateCamera()}
 function updateCamera(){
-  if(!camera)return;
-  const span=boardSpan(size)+5;
-  const radius=span*1.05+9;
-  const tilt=Math.max(.55,Math.min(1.08,cameraTilt));
-  camera.position.set(
-    Math.sin(cameraAzimuth)*radius*Math.cos(tilt),
-    radius*Math.sin(tilt),
-    Math.cos(cameraAzimuth)*radius*Math.cos(tilt)
-  );
-  camera.lookAt(0,0,0);
-  camera.fov=level>12?47:43;
-  camera.updateProjectionMatrix();
+ if(!camera)return;
+ const span=boardSpan(size)+5;
+ const radius=span*1.05+9;
+ const tilt=Math.max(.55,Math.min(1.08,cameraTilt));
+ const target=new THREE.Vector3(0,0,0);
+ camera.position.set(Math.sin(cameraAzimuth)*radius*Math.cos(tilt),radius*Math.sin(tilt),Math.cos(cameraAzimuth)*radius*Math.cos(tilt));
+ camera.lookAt(target);
+ camera.fov=level>12?47:43;camera.updateProjectionMatrix();
 }
-
-function onResize(){
-  if(!renderer||!camera)return;
-  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.7));
-  renderer.setSize(innerWidth,innerHeight,false);
-  camera.aspect=innerWidth/innerHeight;
-  camera.updateProjectionMatrix();
-}
-
-function screenToNDC(e){
-  const rect=$('scene').getBoundingClientRect();
-  return new THREE.Vector2(
-    (e.clientX-rect.left)/rect.width*2-1,
-    -((e.clientY-rect.top)/rect.height*2-1)
-  );
-}
-
+function onResize(){if(!renderer||!camera)return;renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.7));renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}
+function screenToNDC(e){const rect=$('scene').getBoundingClientRect();return new THREE.Vector2((e.clientX-rect.left)/rect.width*2-1,-((e.clientY-rect.top)/rect.height*2-1))}
 function onPointerDown(e){
-  if(!$('game').classList.contains('active')||locked)return;
-  pointerStart={x:e.clientX,y:e.clientY,id:e.pointerId};
-  lastPointer={x:e.clientX,y:e.clientY};
-  dragged=false;
-  $('scene').setPointerCapture?.(e.pointerId);
+ if(!$('game').classList.contains('active')||locked)return;
+ pointerStart={x:e.clientX,y:e.clientY,id:e.pointerId};lastPointer={x:e.clientX,y:e.clientY};dragged=false;
+ $('scene').setPointerCapture?.(e.pointerId);
 }
-
 function onPointerMove(e){
-  if(!pointerStart||pointerStart.id!==e.pointerId)return;
-  const dx=e.clientX-lastPointer.x,dy=e.clientY-lastPointer.y;
-  if(Math.hypot(e.clientX-pointerStart.x,e.clientY-pointerStart.y)>7)dragged=true;
-  if(dragged){
-    cameraAzimuth-=dx*.006;
-    cameraTilt=Math.max(.58,Math.min(1.05,cameraTilt+dy*.004));
-    updateCamera();
-  }
-  lastPointer={x:e.clientX,y:e.clientY};
+ if(!pointerStart||pointerStart.id!==e.pointerId)return;
+ const dx=e.clientX-lastPointer.x,dy=e.clientY-lastPointer.y;
+ if(Math.hypot(e.clientX-pointerStart.x,e.clientY-pointerStart.y)>7)dragged=true;
+ if(dragged){
+  cameraAzimuth-=dx*.006;
+  cameraTilt=Math.max(.58,Math.min(1.05,cameraTilt+dy*.004));
+  updateCamera();
+ }
+ lastPointer={x:e.clientX,y:e.clientY};
 }
-
 function onPointerUp(e){
-  if(!pointerStart||pointerStart.id!==e.pointerId)return;
-  const wasDrag=dragged;
-  pointerStart=null;
-  lastPointer=null;
-  if(wasDrag)return;
-  const ndc=screenToNDC(e);
-  raycaster.setFromCamera(ndc,camera);
-  const meshes=[];
-  carGroup.children.forEach(g=>g.traverse(o=>{if(o.isMesh)meshes.push(o)}));
-  const hits=raycaster.intersectObjects(meshes,false);
-  if(!hits.length)return;
-  let obj=hits[0].object;
-  while(obj.parent&&obj.parent!==carGroup)obj=obj.parent;
-  const i=obj.userData.index;
-  if(Number.isInteger(i))tryDrive(i);
+ if(!pointerStart||pointerStart.id!==e.pointerId)return;
+ const wasDrag=dragged;pointerStart=null;lastPointer=null;
+ if(wasDrag)return;
+ const ndc=screenToNDC(e);raycaster.setFromCamera(ndc,camera);
+ const meshes=[];carGroup.children.forEach(g=>g.traverse(o=>{if(o.isMesh)meshes.push(o)}));
+ const hits=raycaster.intersectObjects(meshes,false);
+ if(!hits.length)return;
+ let obj=hits[0].object;while(obj.parent&&obj.parent!==carGroup)obj=obj.parent;
+ const i=obj.userData.index;if(Number.isInteger(i))tryDrive(i);
 }
-
-function onPointerCancel(){
-  pointerStart=null;
-  lastPointer=null;
-}
-
+function onPointerCancel(){pointerStart=null;lastPointer=null}
 function tryDrive(i){
-  if(locked||!cars[i])return;
-  if(!pathClear(cars,size,i,cars[i].dir)){
-    setStatus('🚧 الطريق مسدود! أخرج السيارة التي تعترض مسارها أولًا.');
-    return;
-  }
-  driveCar(i);
+ if(locked||!cars[i])return;
+ if(!pathClear(cars,size,i,cars[i].dir)){setStatus('🚧 الطريق مسدود! أخرج السيارة التي تعترض مسارها أولًا.');return}
+ driveCar(i);
 }
-
 function driveCar(i){
-  const car=cars[i],mesh=car.mesh;
-  if(!mesh)return;
-  locked=true;
-  car.moving=true;
-  const d=DIRS[car.dir],from=mesh.position.clone();
-  const span=boardSpan(size)/2+9;
-  const dest=new THREE.Vector3(
-    from.x+d.dc*span,
-    from.y,
-    from.z+d.dr*span
-  );
-  cars[i]=null;
-  updateHUD();
-  buildHintArrow();
-  animatingCars.add({mesh,from,dest,duration:1.35,t:0});
-  setStatus('🚘 السيارة تعبر المخرج وتتابع طريقها…');
+ const car=cars[i],mesh=car&&car.mesh;
+ if(!mesh||locked)return;
+ locked=true;car.moving=true;
+ const from=mesh.position.clone();
+ const half=boardSpan(size)/2;
+ const edge=half+spacing*.52;
+ const lane=half+3.0;
+ let pts=[from.clone()];
+ if(car.dir==='U'){
+  pts.push(new THREE.Vector3(from.x,0,-edge));
+  pts.push(new THREE.Vector3(from.x,0,-lane));
+  pts.push(new THREE.Vector3(from.x+.15,0,-lane-.45));
+  pts.push(new THREE.Vector3(from.x+.65,0,-lane-.75));
+  pts.push(new THREE.Vector3(from.x+2.0,0,-lane-.75));
+  pts.push(new THREE.Vector3(from.x+5.8,0,-lane-.75));
+ }else if(car.dir==='D'){
+  pts.push(new THREE.Vector3(from.x,0,edge));
+  pts.push(new THREE.Vector3(from.x,0,lane));
+  pts.push(new THREE.Vector3(from.x-.15,0,lane+.45));
+  pts.push(new THREE.Vector3(from.x-.65,0,lane+.75));
+  pts.push(new THREE.Vector3(from.x-2.0,0,lane+.75));
+  pts.push(new THREE.Vector3(from.x-5.8,0,lane+.75));
+ }else if(car.dir==='R'){
+  pts.push(new THREE.Vector3(edge,0,from.z));
+  pts.push(new THREE.Vector3(lane,0,from.z));
+  pts.push(new THREE.Vector3(lane+.45,0,from.z-.15));
+  pts.push(new THREE.Vector3(lane+.75,0,from.z-.65));
+  pts.push(new THREE.Vector3(lane+.75,0,from.z-2.0));
+  pts.push(new THREE.Vector3(lane+.75,0,from.z-5.8));
+ }else{
+  pts.push(new THREE.Vector3(-edge,0,from.z));
+  pts.push(new THREE.Vector3(-lane,0,from.z));
+  pts.push(new THREE.Vector3(-lane-.45,0,from.z+.15));
+  pts.push(new THREE.Vector3(-lane-.75,0,from.z+.65));
+  pts.push(new THREE.Vector3(-lane-.75,0,from.z+2.0));
+  pts.push(new THREE.Vector3(-lane-.75,0,from.z+5.8));
+ }
+ const curve=new THREE.CatmullRomCurve3(pts,false,'centripetal');
+ const length=curve.getLength();
+ cars[i]=null;updateHUD();buildHintArrow();
+ animatingCars.add({mesh,curve,length,duration:Math.max(2.6,length/3.7),t:0});
+ setStatus('🚘 السيارة تخرج من الموقف، تنعطف إلى الشارع وتواصل السير…');
 }
-
 function animate(dt){
-  if(!renderer||!scene)return;
-  const delta=Math.min(dt||.016,.05);
-  lastTime+=delta;
-  for(const a of [...animatingCars]){
-    a.t+=delta;
-    const p=Math.min(1,a.t/a.duration);
-    const ease=p*p*(3-2*p);
-    a.mesh.position.lerpVectors(a.from,a.dest,ease);
-    if(p>=1){
-      carGroup.remove(a.mesh);
-      a.mesh.traverse(o=>{
-        if(o.isMesh){
-          o.geometry.dispose();
-          if(o.material){
-            if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());
-            else o.material.dispose();
-          }
-        }
-      });
-      animatingCars.delete(a);
-      locked=false;
-      if(cars.every(c=>!c)&&animatingCars.size===0&&!winShown)winLevel();
-      else setStatus('اختر سيارة أخرى طريقها مفتوح.');
-    }
+ if(!renderer||!scene)return;
+ const delta=Math.min(dt||.016,.05);lastTime+=delta;
+ for(const a of [...animatingCars]){
+  a.t+=delta;
+  const p=Math.min(1,a.t/a.duration);
+  const ease=p*p*(3-2*p);
+  const u=Math.min(.9999,ease);
+  const pos=a.curve.getPointAt(u);
+  const tangent=a.curve.getTangentAt(u).normalize();
+  a.mesh.position.copy(pos);
+  a.mesh.rotation.y=Math.atan2(-tangent.x,-tangent.z);
+  if(p>=1){
+   carGroup.remove(a.mesh);
+   a.mesh.traverse(o=>{if(o.isMesh){o.geometry.dispose();if(o.material){if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material.dispose()}}});
+   animatingCars.delete(a);
+   if(cars.every(c=>!c)&&animatingCars.size===0)winLevel();
+   else{locked=false;setStatus('اختر سيارة أخرى طريقها مفتوح.');}
   }
-  if(arrowGroup.children[0]){
-    arrowGroup.children[0].material.opacity=.72+Math.sin(lastTime*4)*.22;
-  }
-  renderer.render(scene,camera);
+ }
+ if(arrowGroup.children[0])arrowGroup.children[0].material.opacity=.72+Math.sin(lastTime*4)*.22;
+ renderer.render(scene,camera);
 }
-
 function winLevel(){
-  winShown=true;
-  locked=true;
-  const reward=12+level*3;
-  coins+=reward;
-  unlocked=Math.max(unlocked,level+1);
-  save();
-  updateHUD();
-  $('winText').textContent=`أكملت المرحلة ${level} وحصلت على ${reward} عملة.`;
-  $('overlay').classList.add('show');
+ winShown=true;locked=true;const reward=12+level*3;coins+=reward;unlocked=Math.max(unlocked,level+1);save();updateHUD();
+ $('winText').textContent=`أكملت المرحلة ${level} وحصلت على ${reward} عملة.`;
+ $('overlay').classList.add('show');
 }
-
-function restartLevel(){
-  animatingCars.clear();
-  cars=initialCars.map(c=>c?{...c,mesh:null}:null);
-  locked=false;
-  winShown=false;
-  buildEnvironment();
-  rebuildCars();
-  resetCamera();
-  setStatus('أعيدت المرحلة. خطط لحركاتك من جديد.');
-}
-
+function restartLevel(){if(locked&&animatingCars.size)return;cars=initialCars.map(c=>c?{...c,mesh:null}:null);locked=false;winShown=false;animatingCars.clear();buildEnvironment();rebuildCars();resetCamera();setStatus('أعيدت المرحلة. خطط لحركاتك من جديد.')}
 function hint(){
-  if(locked)return;
-  if(coins<5){
-    setStatus('تحتاج إلى 5 عملات للحصول على تلميح.');
-    return;
-  }
-  const i=cars.findIndex((c,idx)=>c&&pathClear(cars,size,idx,c.dir));
-  if(i<0){
-    setStatus('لا توجد سيارة متاحة للخروج الآن.');
-    return;
-  }
-  coins-=5;
-  save();
-  updateHUD();
-  buildHintArrow();
-  setStatus('💡 السهم الأخضر يوضح اتجاه سيارة يمكنها الخروج الآن.');
+ if(locked)return;
+ if(coins<5){setStatus('تحتاج إلى 5 عملات للحصول على تلميح.');return}
+ const i=cars.findIndex((c,idx)=>c&&pathClear(cars,size,idx,c.dir));
+ if(i<0){setStatus('لا توجد سيارة متاحة للخروج الآن.');return}
+ coins-=5;save();updateHUD();buildHintArrow();setStatus('💡 السهم الأخضر يوضح اتجاه سيارة يمكنها الخروج الآن.');
 }
-
 function openLevels(){
-  const grid=$('levelsGrid');
-  grid.innerHTML='';
-  for(let i=1;i<=Math.min(40,unlocked+4);i++){
-    const b=document.createElement('button');
-    b.className='level-tile'+(i>unlocked?' locked':'');
-    b.textContent=i>unlocked?'🔒':i;
-    b.disabled=i>unlocked;
-    b.addEventListener('click',()=>{
-      level=i;
-      save();
-      syncHome();
-      startLevel();
-    });
-    grid.appendChild(b);
-  }
-  showScreen('levelPicker');
+ const grid=$('levelsGrid');grid.innerHTML='';
+ for(let i=1;i<=Math.min(40,unlocked+4);i++){
+  const b=document.createElement('button');b.className='level-tile'+(i>unlocked?' locked':'');b.textContent=i>unlocked?'🔒':i;
+  b.disabled=i>unlocked;b.addEventListener('click',()=>{level=i;save();syncHome();startLevel()});grid.appendChild(b);
+ }
+ showScreen('levelPicker');
 }
-
 $('startBtn').addEventListener('click',()=>startLevel());
 $('levelsBtn').addEventListener('click',openLevels);
 $('closeLevels').addEventListener('click',()=>showScreen('home'));
-$('homeBtn').addEventListener('click',()=>{
-  if(!locked){showScreen('home');syncHome()}
-});
-$('cameraBtn').addEventListener('click',()=>{
-  resetCamera();
-  setStatus('عادت الكاميرا إلى زاويتها الأصلية.');
-});
+$('homeBtn').addEventListener('click',()=>{if(!locked){showScreen('home');syncHome()}});
+$('cameraBtn').addEventListener('click',()=>{resetCamera();setStatus('عادت الكاميرا إلى زاويتها الأصلية.')});
 $('restartBtn').addEventListener('click',restartLevel);
 $('hintBtn').addEventListener('click',hint);
-$('nextBtn').addEventListener('click',()=>{
-  level++;
-  save();
-  syncHome();
-  startLevel();
-});
-$('retryBtn').addEventListener('click',()=>{
-  $('overlay').classList.remove('show');
-  restartLevel();
-});
-$('winHomeBtn').addEventListener('click',()=>{
-  $('overlay').classList.remove('show');
-  locked=false;
-  showScreen('home');
-  syncHome();
-});
-
+$('nextBtn').addEventListener('click',()=>{level++;save();syncHome();startLevel()});
+$('retryBtn').addEventListener('click',()=>{$('overlay').classList.remove('show');restartLevel()});
+$('winHomeBtn').addEventListener('click',()=>{$('overlay').classList.remove('show');locked=false;showScreen('home');syncHome()});
 load();
 initThree();
 </script>
 </body>
-</html> 
+</html>
