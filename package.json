@@ -1,8 +1,8 @@
 {
-  "name": "arrow-maze",
+  "name": "parking-escape-3d",
   "version": "1.0.0",
   "private": true,
-  "description": "Arrow Maze - Mobile Puzzle Game",
+  "description": "Parking Escape 3D - Car Parking Puzzle Game",
   "type": "module",
   "scripts": {
     "build": "echo Static game ready",
