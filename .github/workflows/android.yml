@@ -1,4 +1,4 @@
-name: Build Arrow Maze Android
+name: Build Parking Escape 3D Android
 
 on:
   workflow_dispatch:
@@ -32,11 +32,27 @@ jobs:
         run: npm install
 
       - name: Verify web assets
-        run: |
-          test -f www/index.html
+        run: test -f www/index.html
 
       - name: Generate Android project
         run: npx cap add android
+
+      - name: Configure Android app name
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("android/app/src/main/res/values/strings.xml")
+          p.parent.mkdir(parents=True, exist_ok=True)
+          p.write_text('''<?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <string name="app_name">Parking Escape 3D</string>
+              <string name="title_activity_main">Parking Escape 3D</string>
+              <string name="package_name">com.arrowmaze.game</string>
+              <string name="custom_url_scheme">com.arrowmaze.game</string>
+          </resources>
+          ''', encoding="utf-8")
+          PY
 
       - name: Sync Android project
         run: npx cap sync android
@@ -47,7 +63,7 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-            - name: Upload APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: parking-escape-3d-apk
